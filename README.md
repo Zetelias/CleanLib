@@ -2,4 +2,6 @@
 Currently in "open development", meaning that the API is not stable, and the library is not feature complete.
 I have made public so people can follow it's development, and open PR"s.
 
+See DESIGN.md for the design of the library.
+
 TODO: Write the readme
