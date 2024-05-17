@@ -7,4 +7,6 @@ add_executable(CleanLib main.cpp
         DynamicArray.h
         IntegerTypedefs.h
         CompilerDefines.h
-        Option.h)
+        Option.h
+        Slice.h
+        Iterator.h)

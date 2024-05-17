@@ -10,6 +10,8 @@
 #include <memory>
 
 #include "IntegerTypedefs.h"
+#include "Option.h"
+#include "Slice.h"
 
 /**
  * @brief A dynamic array that stores elements in a stack-allocated array until it reaches a certain size,
@@ -115,13 +117,31 @@ public:
         }
     }
 
-    void ResizeIfOnHeap(usize newCapacity) {
+
+    void ResizeToIfOnHeap(usize newCapacity) {
         if (capacity > StackSize) {
             T* newHeapArr = new T[newCapacity];
             std::copy(heapArr, heapArr + length, newHeapArr);
             delete[] heapArr;
             heapArr = newHeapArr;
             capacity = newCapacity;
+        }
+    }
+
+    void Resize(usize newCapacity) {
+        if (newCapacity <= StackSize) {
+            if (capacity > StackSize) {
+                std::copy(heapArr, heapArr + newCapacity, stackArr);
+                delete[] heapArr;
+            }
+            capacity = StackSize;
+        } else {
+            if (capacity <= StackSize) {
+                growToHeap();
+            }
+            if (newCapacity > capacity) {
+                ResizeToIfOnHeap(newCapacity);
+            }
         }
     }
 
@@ -147,6 +167,42 @@ public:
 
     T& operator[](usize index) {
         return (capacity <= StackSize) ? stackArr[index] : heapArr[index];
+    }
+
+    T* AtNullablePtr(usize index) const {
+        return (index < length) ? &operator[](index) : nullptr;
+    }
+
+    T* AtNullablePtrMut(usize index) {
+        return (index < length) ? &operator[](index) : nullptr;
+    }
+
+    Option<std::reference_wrapper<T&>> AtOption(usize index) const {
+        return (index < length) ? SomeCopy(std::ref(operator[](index))) : None<std::reference_wrapper<T&>>();
+    }
+
+    Option<std::reference_wrapper<T>> AtOptionMut(usize index) {
+        return (index < length) ? SomeCopy(std::ref(operator[](index))) : None<std::reference_wrapper<T>>();
+    }
+
+    T* begin() {
+        return (capacity <= StackSize) ? stackArr : heapArr;
+    }
+
+    T* end() {
+        return (capacity <= StackSize) ? stackArr + length : heapArr + length;
+    }
+
+    T* begin() const {
+        return (capacity <= StackSize) ? stackArr : heapArr;
+    }
+
+    T* end() const {
+        return (capacity <= StackSize) ? stackArr + length : heapArr + length;
+    }
+
+    Slice<T> AsSlice() {
+        return Slice<T>::New((capacity <= StackSize) ? stackArr : heapArr, length);
     }
 };
 

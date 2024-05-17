@@ -17,37 +17,59 @@ template <typename T>
 class Option {
 protected:
     std::optional<T> value;
+
 public:
-    Option() : value() {
+    constexpr Option() : value() {
+    }
+    constexpr Option(const T& value) : value(value) {
+    }
+    constexpr Option(T&& value) : value(std::move(value)) {
     }
 
-    Option(const T& value) : value(value) {
+    constexpr static Option NewNone() {
+        return Option();
     }
 
-    Option(T&& value) : value(std::move(value)) {
+    constexpr static Option NewSomeCopy(const T& value) {
+        return Option(value);
     }
 
-    T& Unwrap() {
+    constexpr static Option NewSomeMove(T&& value) {
+        return Option(std::move(value));
+    }
+
+    constexpr explicit operator bool() const {
+        return value.has_value();
+    }
+
+    T&& UnwrapMove() {
         if (!value.has_value()) {
             throw std::runtime_error("Option does not contain a value.");
         }
-        return value.value();
+        return std::move(value.value());
+    }
+
+    constexpr T* UnwrapPtr() const {
+        if (!value.has_value()) {
+            return nullptr;
+        }
+        return const_cast<int*>(&value.value());
     }
 };
 
 template <typename T>
-Option<T> SomeCopy(const T& value) {
-    return Option<T>(value);
+constexpr Option<T> SomeCopy(const T& value) {
+    return Option<T>::NewSomeCopy(T(value));
 }
 
 template <typename T>
-Option<T> SomeMove(T&& value) {
-    return Option<T>(std::forward<T>(value));
+constexpr Option<T> SomeMove(T&& value) {
+    return Option<T>::NewSomeMove(T(std::forward<T>(value)));
 }
 
 template <typename T>
-Option<T> None() {
-    return Option<T>();
+constexpr Option<T> None() {
+    return Option<T>::NewNone();
 }
 
 #endif //OPTION_H
